@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#101426">
+  <title>CrashX — Virtual Crash Game</title>
+
+  <style>
+    :root {
+      --bg: #101426;
+      --panel: #191f35;
+      --panel2: #202842;
+      --text: #f5f7ff;
+      --muted: #aab2cc;
+      --green: #37e0a1;
+      --red: #ff5874;
+      --gold: #ffd166;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: radial-gradient(
+        ellipse at top,
+        #202b4c 0,
+        #101426 55%
+      );
+      color: var(--text);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      min-height: 100vh;
+    }
+
+    .wrap {
+      width: min(100%, 920px);
+      margin: auto;
+      padding: 20px 14px 34px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .brand {
+      font-size: 1.35rem;
+      font-weight: 900;
+      letter-spacing: .5px;
+    }
+
+    .brand span {
+      color: var(--green);
+    }
+
+    .pill {
+      background: var(--panel);
+      border: 1px solid #303956;
+      padding: 9px 13px;
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: .88rem;
+    }
+
+    .balance {
+      color: var(--gold);
+      font-weight: 800;
+    }
+
+    .game {
+      background: linear-gradient(180deg, #171e33, #141a2c);
+      border: 1px solid #303956;
+      border-radius: 22px;
+      padding: 16px;
+      box-shadow: 0 18px 50px #0004;
+    }
+
+    .game-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+      color: var(--muted);
+      font-size: .85rem;
+    }
+
+    .screen {
+      position: relative;
+      overflow: hidden;
+      height: 300px;
+      border-radius: 16px;
+      background: linear-gradient(180deg, #101a2d, #101426);
+      border: 1px solid #2c3856;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    .center {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 12px;
+      text-shadow: 0 3px 15px #0008;
+    }
+
+    .multiplier {
+      font-size: clamp(2.8rem, 12vw, 5rem);
+      line-height: 1;
+      font-weight: 950;
+      letter-spacing: -2px;
+      color: var(--green);
+    }
+
+    .status {
+      color: var(--muted);
+      margin-top: 12px;
+      font-weight: 650;
+    }
+
+    .status.crashed {
+      color: var(--red);
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .field {
+      background: var(--panel);
+      border: 1px solid #303956;
+      padding: 12px;
+      border-radius: 14px;
+    }
+
+    label {
+      display: block;
+      color: var(--muted);
+      font-size: .8rem;
+      margin-bottom: 7px;
+    }
+
+    input {
+      width: 100%;
+      background: transparent;
+      color: var(--text);
+      border: 0;
+      outline: none;
+      font-size: 1.15rem;
+      font-weight: 750;
+    }
+
+    .quick {
+      display: flex;
+      gap: 6px;
+      margin-top: 9px;
+    }
+
+    .quick button {
+      flex: 1;
+      background: #29324c;
+      color: #dce3fa;
+      border: 0;
+      border-radius: 8px;
+      padding: 7px 3px;
+      font-weight: 700;
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    button.main {
+      min-height: 54px;
+      border: 0;
+      border-radius: 14px;
+      font-size: 1rem;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      opacity: .45;
+      cursor: not-allowed;
+    }
+
+    #betBtn {
+      background: var(--green);
+      color: #09251c;
+    }
+
+    #cashBtn {
+      background: var(--gold);
+      color: #342300;
+    }
+
+    .message {
+      min-height: 24px;
+      text-align: center;
+      margin: 12px 0 0;
+      color: var(--muted);
+      font-size: .92rem;
+    }
+
+    .lower {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 14px;
+      margin-top: 14px;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid #303956;
+      border-radius: 18px;
+      padding: 15px;
+      min-width: 0;
+    }
+
+    h2 {
+      font-size: 1rem;
+      margin: 0 0 12px;
+    }
+
+    .history {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+    }
+
+    .chip {
+      border-radius: 8px;
+      padding: 7px 9px;
+      background: #29324c;
+      color: var(--green);
+      font-weight: 800;
+      font-size: .84rem;
+    }
+
+    .chip.low {
+      color: var(--red);
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .stat {
+      background: var(--panel2);
+      border-radius: 12px;
+      padding: 11px;
+    }
+
+    .stat small {
+      color: var(--muted);
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    .stat strong {
+      font-size: 1.1rem;
+    }
+
+    .notice {
+      color: var(--muted);
+      font-size: .78rem;
+      line-height: 1.5;
+      text-align: center;
+      margin: 16px auto 0;
+      max-width: 650px;
+    }
+
+    @media (max-width: 560px) {
+      .screen {
+        height: 260px;
+      }
+
+      .lower {
+        grid-template-columns: 1fr;
+      }
+
+      .pill {
+        padding: 8px 10px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="wrap">
+
+    <header>
+      <div class="brand">CRASH<span>X</span></div>
+
+      <div class="pill">
+        Virtual balance:
+        <span class="balance" id="balance">1,000</span> pts
+      </div>
+    </header>
+
+    <section class="game">
+
+      <div class="game-top">
+        <span>DEMO MODE · NO REAL MONEY</span>
+        <span id="roundLabel">Round #1</span>
+      </div>
+
+      <div class="screen">
+        <canvas id="chart" aria-hidden="true"></canvas>
+
+        <div class="center">
+          <div class="multiplier" id="multiplier">1.00x</div>
+          <div class="status" id="status">
+            Place a bet to join the next round
+          </div>
+        </div>
+      </div>
+
+      <div class="controls">
+
+        <div class="field">
+          <label for="betAmount">BET AMOUNT (POINTS)</label>
+
+          <input
+            id="betAmount"
+            type="number"
+            min="1"
+            step="1"
+            value="100"
+            inputmode="numeric"
+          >
+
+          <div class="quick">
+            <button type="button" data-add="25">+25</button>
+            <button type="button" data-add="100">+100</button>
+            <button type="button" data-half="1">½</button>
+            <button type="button" data-max="1">MAX</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="autoCash">
+            AUTO CASH OUT (OPTIONAL)
+          </label>
+
+          <input
+            id="autoCash"
+            type="number"
+            min="1.01"
+            step="0.01"
+            placeholder="e.g. 2.00"
+            inputmode="decimal"
+          >
+
+          <div style="color:var(--muted);font-size:.76rem;margin-top:9px">
+            Leave blank to cash out manually.
+          </div>
+        </div>
+
+      </div>
+
+      <div class="actions">
+        <button class="main" id="betBtn">
+          PLACE BET · 100
+        </button>
+
+        <button class="main" id="cashBtn" disabled>
+          CASH OUT
+        </button>
+      </div>
+
+      <p class="message" id="message" aria-live="polite">
+        Ready when you are. Bet with virtual points only.
+      </p>
+
+    </section>
+
+    <section class="lower">
+
+      <div class="card">
+        <h2>Recent crash history</h2>
+
+        <div class="history" id="history">
+          <span style="color:var(--muted)">
+            Play a round to start your history.
+          </span>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Your session</h2>
+
+        <div class="stats">
+
+          <div class="stat">
+            <small>Rounds played</small>
+            <strong id="roundsPlayed">0</strong>
+          </div>
+
+          <div class="stat">
+            <small>Net points</small>
+            <strong id="netPoints">0</strong>
+          </div>
+
+          <div class="stat">
+            <small>Total wins</small>
+            <strong id="wins">0</strong>
+          </div>
+
+          <div class="stat">
+            <small>Best cash-out</small>
+            <strong id="best">—</strong>
+          </div>
+
+        </div>
+      </div>
+
+    </section>
+
+    <p class="notice">
+      CrashX is a learning prototype. Points have no cash value
+      and cannot be deposited, transferred, or withdrawn.
+      Game results are generated in your browser and are not
+      securely verified.
+    </p>
+
+  </main>
+
+  <script>
+    (() => {
+      const $ = id => document.getElementById(id);
+
+      const canvas = $("chart");
+      const ctx = canvas.getContext("2d");
+
+      let balance = 1000;
+      let round = 1;
+      let state = "ready";
+      let bet = 0;
+      let multiplier = 1;
+      let crashAt = 1.8;
+
+      let startTime = 0;
+      let hasBet = false;
+      let cashed = false;
+
+      let roundsPlayed = 0;
+      let wins = 0;
+      let net = 0;
+      let best = 0;
+
+      let history = [];
+      let startTimer = null;
+
+      function fmt(n) {
+        return Math.floor(n).toLocaleString("en-US");
+      }
+
+      function setBalance() {
+        $("balance").textContent = fmt(balance);
+      }
+
+      function setMessage(text) {
+        $("message").textContent = text;
+      }
+
+      function resizeCanvas() {
+        const rect = canvas.getBoundingClientRect();
+        const dpr = window.devicePixelRatio || 1;
+
+        canvas.width = Math.floor(rect.width * dpr);
+        canvas.height = Math.floor(rect.height * dpr);
+
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+        drawGraph();
+      }
+
+      function drawGraph() {
+        const w = canvas.clientWidth;
+        const h = canvas.clientHeight;
+
+        ctx.clearRect(0, 0, w, h);
+
+        ctx.strokeStyle = "#27324b";
+        ctx.lineWidth = 1;
+
+        for (let x = 0; x < w; x += 36) {
+          ctx.beginPath();
+          ctx.moveTo(x, 0);
+          ctx.lineTo(x, h);
+          ctx.stroke();
+        }
+
+        for (let y = 0; y < h; y += 36) {
+          ctx.beginPath();
+          ctx.moveTo(0, y);
+          ctx.lineTo(w, y);
+          ctx.stroke();
+        }
+
+        if (state !== "running" && multiplier <= 1) {
+          return;
+        }
+
+        const progress = Math.max(
+          0.04,
+          Math.min(
+            1,
+            (multiplier - 1) / (Math.max(1.5, crashAt) - 1)
+          )
+        );
+
+        const endX = Math.max(20, progress * (w - 38));
+
+        ctx.beginPath();
+        ctx.moveTo(18, h - 22);
+
+        for (let i = 1; i <= 40; i++) {
+          const t = i / 40;
+          const x = 18 + endX * t;
+
+          const y =
+            h - 22 -
+            (h - 48) *
+            Math.pow(t, 1.65) *
+            Math.min(1.15, multiplier / 2.2);
+
+          ctx.lineTo(x, Math.max(16, y));
+        }
+
+        ctx.strokeStyle =
+          state === "crashed" ? "#ff5874" : "#37e0a1";
+
+        ctx.lineWidth = 3;
+        ctx.lineCap = "round";
+        ctx.stroke();
+
+        ctx.lineTo(18 + endX, h - 22);
+        ctx.closePath();
+
+        ctx.fillStyle =
+          state === "crashed"
+            ? "rgba(255,88,116,.10)"
+            : "rgba(55,224,161,.10)";
+
+        ctx.fill();
+      }
+
+      function render() {
+        $("multiplier").textContent =
+          multiplier.toFixed(2) + "x";
+
+        $("multiplier").style.color =
+          state === "crashed"
+            ? "var(--red)"
+            : "var(--green)";
+
+        if (state === "running") {
+          $("status").textContent =
+            hasBet && !cashed
+              ? "Bet is live — cash out before the crash!"
+              : "Multiplier is climbing…";
+        } else if (state === "crashed") {
+          $("status").textContent =
+            "CRASHED AT " + crashAt.toFixed(2) + "x";
+        } else {
+          $("status").textContent =
+            "Place a bet to join the next round";
+        }
+
+        $("status").classList.toggle(
+          "crashed",
+          state === "crashed"
+        );
+
+        $("roundLabel").textContent = "Round #" + round;
+
+        $("betBtn").disabled =
+          state === "running" || state === "waiting";
+
+        $("betBtn").textContent =
+          state === "crashed"
+            ? "NEXT ROUND"
+            : hasBet && !cashed
+              ? "BET ACTIVE"
+              : "PLACE BET · " +
+                fmt(Number($("betAmount").value) || 0);
+
+        $("cashBtn").disabled = !(
+          state === "running" &&
+          hasBet &&
+          !cashed
+        );
+
+        $("roundsPlayed").textContent = roundsPlayed;
+        $("wins").textContent = wins;
+
+        $("netPoints").textContent =
+          (net > 0 ? "+" : "") + fmt(net);
+
+        $("netPoints").style.color =
+          net >= 0 ? "var(--green)" : "var(--red)";
+
+        $("best").textContent =
+          best ? best.toFixed(2) + "x" : "—";
+
+        drawGraph();
+      }
+
+      function chooseCrash() {
+        const r = Math.random();
+
+        if (r < 0.025) {
+          return 1.00;
+        }
+
+        return Math.min(
+          25,
+          Math.max(
+            1.01,
+            Math.floor((0.98 / (1 - r)) * 100) / 100
+          )
+        );
+      }
+
+      function placeBet() {
+        if (state === "crashed") {
+          nextRound();
+          return;
+        }
+
+        if (state !== "ready") {
+          return;
+        }
+
+        const amount = Number($("betAmount").value);
+
+        if (!Number.isInteger(amount) || amount < 1) {
+          setMessage(
+            "Enter a whole-number bet of at least 1 point."
+          );
+          return;
+        }
+
+        if (amount > balance) {
+          setMessage(
+            "Not enough points. Lower your bet amount."
+          );
+          return;
+        }
+
+        bet = amount;
+        balance -= bet;
+
+        setBalance();
+
+        hasBet = true;
+        cashed = false;
+
+        startRound();
+      }
+
+      function startRound() {
+        state = "waiting";
+        multiplier = 1;
+        crashAt = chooseCrash();
+
+        render();
+
+        setMessage("Bet locked in. Round starting…");
+
+        startTimer = setTimeout(() => {
+          if (state !== "waiting") {
+            return;
+          }
+
+          state = "running";
+          startTime = performance.now();
+
+          setMessage(
+            "Round live! Cash out before it crashes."
+          );
+
+          render();
+          tick();
+        }, 900);
+      }
+
+      function tick(now = performance.now()) {
+        if (state !== "running") {
+          return;
+        }
+
+        const elapsed = (now - startTime) / 1000;
+
+        multiplier = Math.exp(elapsed * 0.22);
+
+        if (hasBet && !cashed) {
+          const auto = Number($("autoCash").value);
+
+          if (
+            Number.isFinite(auto) &&
+            auto >= 1.01 &&
+            multiplier >= auto &&
+            auto < crashAt
+          ) {
+            cashOut(auto);
+            return;
+          }
+        }
+
+        if (multiplier >= crashAt) {
+          multiplier = crashAt;
+          crash();
+          return;
+        }
+
+        render();
+
+        requestAnimationFrame(tick);
+      }
+
+      function cashOut(value = multiplier) {
+        if (
+          state !== "running" ||
+          !hasBet ||
+          cashed
+        ) {
+          return;
+        }
+
+        if (value >= crashAt) {
+          crash();
+          return;
+        }
+
+        cashed = true;
+
+        const payout = Math.floor(bet * value);
+
+        balance += payout;
+        net += payout - bet;
+        wins++;
+
+        best = Math.max(best, value);
+
+        setBalance();
+
+        setMessage(
+          "Cashed out at " +
+          value.toFixed(2) +
+          "x — received " +
+          fmt(payout) +
+          " points (" +
+          (payout - bet >= 0 ? "+" : "") +
+          fmt(payout - bet) +
+          " net)."
+        );
+
+        render();
+      }
+
+      function crash() {
+        state = "crashed";
+        roundsPlayed++;
+
+        if (hasBet && !cashed) {
+          net -= bet;
+
+          setMessage(
+            "Crashed at " +
+            crashAt.toFixed(2) +
+            "x. You lost " +
+            fmt(bet) +
+            " virtual points."
+          );
+        } else if (cashed) {
+          setMessage(
+            "Round ended at " +
+            crashAt.toFixed(2) +
+            "x. Your cash-out is safe!"
+          );
+        } else {
+          setMessage(
+            "Round ended at " +
+            crashAt.toFixed(2) +
+            "x. You were watching this round."
+          );
+        }
+
+        history.unshift(crashAt);
+        history = history.slice(0, 8);
+
+        renderHistory();
+        render();
+      }
+
+      function renderHistory() {
+        $("history").innerHTML = "";
+
+        history.forEach(value => {
+          const span = document.createElement("span");
+
+          span.className =
+            "chip" + (value < 2 ? " low" : "");
+
+          span.textContent = value.toFixed(2) + "x";
+
+          $("history").appendChild(span);
+        });
+      }
+
+      function nextRound() {
+        if (state !== "crashed") {
+          return;
+        }
+
+        round++;
+        state = "ready";
+
+        bet = 0;
+        hasBet = false;
+        cashed = false;
+        multiplier = 1;
+
+        setMessage(
+          "New round ready. Choose your virtual bet."
+        );
+
+        render();
+      }
+
+      $("betBtn").addEventListener(
+        "click",
+        placeBet
+      );
+
+      $("cashBtn").addEventListener(
+        "click",
+        () => cashOut()
+      );
+
+      $("betAmount").addEventListener(
+        "input",
+        () => {
+          if (state === "ready") {
+            render();
+          }
+        }
+      );
+
+      document.querySelectorAll("[data-add]").forEach(button => {
+        button.addEventListener("click", () => {
+          $("betAmount").value =
+            Math.max(
+              0,
+              Number($("betAmount").value) || 0
+            ) + Number(button.dataset.add);
+
+          if (state === "ready") {
+            render();
+          }
+        });
+      });
+
+      document.querySelector("[data-half]").addEventListener(
+        "click",
+        () => {
+          $("betAmount").value = Math.max(
+            1,
+            Math.floor(
+              (Number($("betAmount").value) || 1) / 2
+            )
+          );
+
+          if (state === "ready") {
+            render();
+          }
+        }
+      );
+
+      document.querySelector("[data-max]").addEventListener(
+        "click",
+        () => {
+          $("betAmount").value = balance;
+
+          if (state === "ready") {
+            render();
+          }
+        }
+      );
+
+      window.addEventListener("resize", resizeCanvas);
+
+      setBalance();
+      resizeCanvas();
+      render();
+    })();
+  </script>
+
+</body>
+</html>
